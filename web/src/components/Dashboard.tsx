@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import * as api from "../api";
 import type { Category, Expense, ExpenseInput, Filter, Member, MemberStatus, Total } from "../types";
 import { formatMoney, monthRange } from "../format";
-import { useAutoRefresh } from "../useAutoRefresh";
 import Filters from "./Filters";
 import Summary from "./Summary";
 import ExpenseTable from "./ExpenseTable";
@@ -57,8 +56,9 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
     load(0);
   }, [load]);
 
-  // Тихое обновление: без индикатора загрузки и с тем же числом строк, что уже показано.
-  useAutoRefresh(async () => {
+  // По кнопке, а не по таймеру: каждый запрос тратит CPU бесплатного тарифа Cloudflare.
+  async function refresh() {
+    setLoading(true);
     try {
       const [page, m] = await Promise.all([
         api.listExpenses(filter, 0, Math.max(items.length, api.PAGE_SIZE)),
@@ -68,10 +68,13 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
       setTotal(page.total);
       setMembers(m);
       setUpdatedAt(new Date());
-    } catch {
-      // сеть моргнула — попробуем на следующем тике
+      setError("");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Не удалось обновить");
+    } finally {
+      setLoading(false);
     }
-  });
+  }
 
   async function updateMember(m: Member, patch: { status?: MemberStatus; name?: string }) {
     try {
@@ -108,13 +111,14 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
       <header className="topbar">
         <div>
           <h1>Семейные расходы</h1>
-          <span className="muted small">
-            обновляется автоматически · {updatedAt.toLocaleTimeString("ru-RU")}
-          </span>
+          <span className="muted small">обновлено в {updatedAt.toLocaleTimeString("ru-RU")}</span>
         </div>
         <div className="topbar-actions">
           <button className="primary" disabled={approved.length === 0} onClick={() => setEditing(null)}>
             + Добавить трату
+          </button>
+          <button disabled={loading} onClick={refresh}>
+            Обновить
           </button>
           <button onClick={() => setFamilyOpen(true)}>Семья ({approved.length})</button>
           <button onClick={onLogout}>Выйти</button>

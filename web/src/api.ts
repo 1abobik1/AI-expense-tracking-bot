@@ -35,15 +35,26 @@ export function setUnauthorizedHandler(handler: () => void) {
   onUnauthorized = handler;
 }
 
-async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+// 503 — Cloudflare оборвал запрос по лимиту CPU бесплатного тарифа. GET безопасно повторить;
+// запись — нет: она могла успеть сохраниться до обрыва.
+const RETRY_DELAYS_MS = [500, 1500];
+
+async function send(method: string, path: string, body?: unknown): Promise<Response> {
   const headers: Record<string, string> = {};
   if (body !== undefined) headers["Content-Type"] = "application/json";
   if (memoryToken) headers["Authorization"] = `Bearer ${memoryToken}`;
-  const resp = await fetch(path, {
-    method,
-    headers,
-    body: body === undefined ? undefined : JSON.stringify(body),
-  });
+  const init = { method, headers, body: body === undefined ? undefined : JSON.stringify(body) };
+  let resp = await fetch(path, init);
+  for (const delay of method === "GET" ? RETRY_DELAYS_MS : []) {
+    if (resp.status !== 503) break;
+    await new Promise((r) => setTimeout(r, delay));
+    resp = await fetch(path, init);
+  }
+  return resp;
+}
+
+async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
+  const resp = await send(method, path, body);
   if (resp.status === 204) return undefined as T;
   const data = await resp.json().catch(() => ({}));
   if (!resp.ok) {
@@ -51,7 +62,8 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
       logout();
       onUnauthorized();
     }
-    throw new ApiError(resp.status, data.error ?? `Ошибка ${resp.status}`);
+    const fallback = resp.status === 503 ? "Сервер перегружен, попробуйте ещё раз" : `Ошибка ${resp.status}`;
+    throw new ApiError(resp.status, data.error ?? fallback);
   }
   return data as T;
 }
