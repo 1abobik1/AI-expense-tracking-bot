@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import * as api from "../api";
 import type { Category, Expense, ExpenseInput, Filter, Member, MemberStatus, Total } from "../types";
-import { formatMoney, monthRange } from "../format";
+import { monthRange } from "../format";
 import Filters from "./Filters";
 import Summary from "./Summary";
 import ExpenseTable from "./ExpenseTable";
@@ -97,7 +97,6 @@ export default function Dashboard({ onLogout }: { onLogout: () => void }) {
   }
 
   async function remove(e: Expense) {
-    if (!confirm(`Удалить трату «${e.comment || e.category}» на ${formatMoney(e.amount)}?`)) return;
     try {
       await api.deleteExpense(e.id);
       await load(0);

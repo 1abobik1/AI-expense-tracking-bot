@@ -35,8 +35,8 @@ export function setUnauthorizedHandler(handler: () => void) {
   onUnauthorized = handler;
 }
 
-// 503 — Cloudflare оборвал запрос по лимиту CPU бесплатного тарифа. GET безопасно повторить;
-// запись — нет: она могла успеть сохраниться до обрыва.
+// 503 — Cloudflare оборвал запрос по лимиту CPU. GET, PATCH и DELETE идемпотентны, их повторяем;
+// POST — нет: трата могла успеть сохраниться до обрыва.
 const RETRY_DELAYS_MS = [500, 1500];
 
 async function send(method: string, path: string, body?: unknown): Promise<Response> {
@@ -45,7 +45,7 @@ async function send(method: string, path: string, body?: unknown): Promise<Respo
   if (memoryToken) headers["Authorization"] = `Bearer ${memoryToken}`;
   const init = { method, headers, body: body === undefined ? undefined : JSON.stringify(body) };
   let resp = await fetch(path, init);
-  for (const delay of method === "GET" ? RETRY_DELAYS_MS : []) {
+  for (const delay of method === "POST" ? [] : RETRY_DELAYS_MS) {
     if (resp.status !== 503) break;
     await new Promise((r) => setTimeout(r, delay));
     resp = await fetch(path, init);

@@ -493,3 +493,9 @@ td.actions button {
     margin: 4px 6px 0 0;
   }
 }
+
+button.armed {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: var(--accent-text);
+}

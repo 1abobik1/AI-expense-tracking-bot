@@ -1,4 +1,5 @@
 import { useState } from "react";
+import ConfirmButton from "./ConfirmButton";
 import type { Member, MemberStatus } from "../types";
 import { telegramLabel } from "./Requests";
 
@@ -57,15 +58,9 @@ function FamilyMember({ member, onUpdate }: { member: Member; onUpdate: Props["o
             Сохранить
           </button>
         )}
-        <button
-          className="danger"
-          onClick={() =>
-            confirm(`Закрыть доступ для «${member.display_name}»? Траты останутся.`) &&
-            onUpdate(member, { status: "rejected" })
-          }
-        >
+        <ConfirmButton onConfirm={() => onUpdate(member, { status: "rejected" })}>
           Закрыть доступ
-        </button>
+        </ConfirmButton>
       </div>
     </div>
   );

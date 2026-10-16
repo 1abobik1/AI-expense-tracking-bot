@@ -1,3 +1,4 @@
+import ConfirmButton from "./ConfirmButton";
 import type { Category, Expense, Member } from "../types";
 import { formatDate, formatMoney } from "../format";
 
@@ -40,9 +41,7 @@ export default function ExpenseTable({ items, members, categories, onEdit, onDel
               <td className="num">{formatMoney(e.amount)}</td>
               <td className="actions">
                 <button onClick={() => onEdit(e)}>Изменить</button>
-                <button className="danger" onClick={() => onDelete(e)}>
-                  Удалить
-                </button>
+                <ConfirmButton onConfirm={() => onDelete(e)}>Удалить</ConfirmButton>
               </td>
             </tr>
           ))}
