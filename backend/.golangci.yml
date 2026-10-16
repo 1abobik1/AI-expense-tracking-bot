@@ -1,0 +1,56 @@
+# Основа — конфиг service-mani; make lint.
+version: "2"
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - errcheck
+    - errorlint
+    - gochecknoinits
+    - gocritic
+    - govet
+    - ineffassign
+    - nilerr
+    - nlreturn # пустая строка перед return/break после блока кода
+    - wsl_v5 # пустые строки вокруг блоков, как в policy-api
+    - noctx
+    - rowserrcheck
+    - sqlclosecheck
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+  settings:
+    wsl_v5:
+      allow-first-in-block: false
+      allow-whole-block: true
+      disable: [decl]
+    nlreturn:
+      block-size: 2 # однострочный «if err != nil { return err }» без пустой строки
+    errorlint:
+      errorf: true
+      asserts: true
+      comparison: true
+    gocritic:
+      enabled-tags: [diagnostic, style, performance]
+      disabled-checks:
+        - hugeParam        # модели передаются по значению намеренно
+        - unnamedResult
+        - whyNoLint
+        - commentedOutCode # примеры в комментариях
+    staticcheck:
+      checks: ["all", "-ST1000", "-ST1003", "-ST1020", "-ST1021", "-ST1022"]
+  exclusions:
+    presets: [comments, common-false-positives, std-error-handling]
+    rules:
+      - path: _test\.go
+        linters: [errcheck, unparam, noctx, bodyclose]
+issues:
+  max-same-issues: 0
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    goimports:
+      local-prefixes: [expensebot]

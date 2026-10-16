@@ -1,0 +1,19 @@
+# Pre-commit: только файлы из коммита; поправленное само добавляется в коммит. make hooks — установка.
+pre-commit:
+  jobs:
+    - name: go lint
+      root: backend/
+      glob: "*.go"
+      stage_fixed: true
+      run: |
+        dirs=$(for f in {staged_files}; do [ -f "$f" ] && dirname "$f"; done | sort -u | sed 's|^|./|')
+        [ -n "$dirs" ] || exit 0
+        ../.tools/bin/golangci-lint run --fix $dirs
+        wasm=$(echo "$dirs" | grep -E '^\./(cmd/worker|internal/agent/clients/llm)$' || true)
+        [ -z "$wasm" ] || GOOS=js GOARCH=wasm ../.tools/bin/golangci-lint run --fix $wasm
+
+    - name: web format
+      root: web/
+      glob: "*.{ts,tsx,css,html}"
+      stage_fixed: true
+      run: npx prettier --write {staged_files} && npx tsc --noEmit

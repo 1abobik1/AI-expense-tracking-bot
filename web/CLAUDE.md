@@ -1,0 +1,34 @@
+# web/CLAUDE.md
+
+Панель главы семьи: React 19 + Vite + TypeScript, без UI-библиотек и стейт-менеджеров.
+
+## Карта
+
+```
+src/api.ts             единственное место HTTP-запросов: токен, 401 → экран входа
+src/types.ts           типы ответов API (зеркало DTO из backend/internal/*/transport/http)
+src/format.ts          деньги, даты, склонения
+src/useAutoRefresh.ts  тихое обновление раз в 15 с, пока вкладка видна
+src/components/        Login, Dashboard (состояние страницы), Filters, Summary,
+                       ExpenseTable, ExpenseForm, Requests (заявки), Family (участники)
+src/styles.css         всё оформление: CSS-переменные в :root, тёмная тема через prefers-color-scheme
+```
+
+## Правила
+
+- **Новый эндпоинт:** функция в `api.ts` и тип в `types.ts`. Компоненты сами `fetch` не вызывают.
+- **Состояние страницы** живёт в `Dashboard`; дочерние компоненты получают данные и колбэки через props.
+- **Суммы в API — рубли, даты — `YYYY-MM-DD`.** Даты разбираются как местная полночь (`format.ts`), иначе сдвигаются на часовой пояс.
+- **Цвета** — только через переменные из `:root` в `styles.css`. Тёмная тема и ширина телефона (≤ 720px) должны работать: таблица на телефоне превращается в карточки.
+- **Тексты интерфейса** — по-русски, коротко.
+
+## Проверка
+
+```bash
+npm run lint     # tsc + prettier --check
+npm run format   # prettier --write
+npm run build
+npm run dev      # с прокси /api на make dev (backend)
+```
+
+Изменения UI проверять глазами: десктоп и телефон (390px), светлая и тёмная тема.

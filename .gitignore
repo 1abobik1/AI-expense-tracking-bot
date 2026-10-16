@@ -1,0 +1,11 @@
+.env
+web/node_modules
+web/dist
+deploy/cloudflare/build
+deploy/cloudflare/d1-migrations
+backend/data
+deploy/cloudflare/wrangler.deploy.toml
+deploy/cloudflare/.wrangler
+deploy/cloudflare/.dev.vars
+.tools
+eval-results.json

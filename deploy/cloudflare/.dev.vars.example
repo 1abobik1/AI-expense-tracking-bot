@@ -1,0 +1,4 @@
+# Скопируй в deploy/cloudflare/.dev.vars для `make cf-dev`.
+ADMIN_PASSWORD=
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_WEBHOOK_SECRET=
